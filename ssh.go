@@ -1,8 +1,10 @@
 package main
 
 import (
+	//"bufio"
 	"fmt"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/terminal"
 	"log"
 	"os"
 )
@@ -30,9 +32,25 @@ func Ssh(username string, password string, ip string, port string) {
 
 	defer session.Close()
 
+	fd := int(os.Stdin.Fd())
+	oldState, err := terminal.MakeRaw(fd)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer terminal.Restore(fd, oldState)
+
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
-	session.Stdin = os.Stdin
+	//in, _ := session.StdinPipe()
+
+	termWith, termHeight, err := terminal.GetSize(fd)
+	fmt.Println(termWith, termHeight)
+
+	if err != nil {
+		panic(err)
+	}
 
 	modes := ssh.TerminalModes{
 		ssh.ECHO:          0,
@@ -40,18 +58,20 @@ func Ssh(username string, password string, ip string, port string) {
 		ssh.TTY_OP_OSPEED: 14400,
 	}
 
-	if err := session.RequestPty("xterm", 40, 80, modes); err != nil {
+	if err := session.RequestPty("xterm-256color", termWith, termHeight, modes); err != nil {
 		log.Fatal("request for pseudo terminal failed: ", err)
 	}
 
 	if err := session.Shell(); err != nil {
-		log.Fatal("Failed to start a shell: ", err)
-	} else {
-		fmt.Println("Connect successfully")
+		panic(err)
 	}
 
-	err = session.Wait()
-	if err != nil {
-		log.Fatal("return")
-	}
+	/*
+	 *for {
+	 *    reader := bufio.NewReader(os.Stdin)
+	 *    str, _ := reader.ReadString('\n')
+	 *    //fmt.Fprint(in, str)
+	 *    session.Run(str)
+	 *}
+	 */
 }
