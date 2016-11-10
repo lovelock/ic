@@ -1,7 +1,26 @@
-# Interactive SSH client for macOS users
+# Interactive SSH client for macOS and Linux users.
 
-There are no SSH client like XShell on Windows, though there is a SecureCRT, but the user experience is much poor than the Windows version.
+## Why I do this?
 
-iTerm2 is a fair well terminal emulator, but its support for SSH is limited.
+As an OS X user, I have been eagering for a friendly SSH client for long.
 
-I researched ssh config file and find it really easy to take advantage of iTerm2 as a much better SSH client.
+We have iTerm as psudo terminal, which does perfect.
+We have open ssh client for connecting to remote hosts, which does quite well, but I have to maintain the config file forever.
+
+Things are much the same to Linux users.
+
+Why no one can make it easier?
+
+## Installation
+
+### Build from source
+
+```
+go get github.com/lovelock/iconnect
+```
+
+### Binary
+
+## Usage
+
+## Contribution

@@ -137,6 +137,12 @@ func main() {
 			Usage:        "A host's `SHORTNAME` that will be shown in the list",
 			BashComplete: listAvailableHosts,
 		},
+		{
+			Name:    "list",
+			Aliases: []string{"l"},
+			Action:  listAvailableHosts,
+			Usage:   "List all available remote hosts",
+		},
 	}
 
 	app.Run(os.Args)
