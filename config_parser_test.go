@@ -11,5 +11,5 @@ func TestGetConfigContent(t *testing.T) {
 }
 
 func TestListBlocks(t *testing.T) {
-	ListBlocks()
+	fmt.Println(ListBlocks())
 }

@@ -29,12 +29,10 @@ func main() {
 				config := SshConfigFile()
 				log.Printf("SSH config file is %s", config)
 
-				// Initialize config file only when it does not exist
 				if Exists(config) == false {
 					err := Create(config)
 					log.Printf("Create %s failed, verbose log %v", config, err)
-					initSetting := []byte("Host *\nControlMaster auto\nControlPath ~/.ssh/master-%r@%h:%p\n")
-					err = Append(config, initSetting)
+					err = Append(config, GetInitSetting())
 					CheckError(err)
 				}
 
@@ -65,6 +63,7 @@ func main() {
 				host := c.String("host")
 				port := c.String("p")
 				username := c.String("u")
+				private_key := c.String("i")
 
 				if host == "" {
 					fmt.Println("Please porivde host at least")
@@ -82,9 +81,12 @@ func main() {
 				if username == "" {
 					username = MyName()
 				}
-				fmt.Println(shortname, host, port, username)
 
-				aSeg := fmt.Sprintf("\n\nHost %s\nHostName %s\nPort %s\nUser %s\n", shortname, host, port, username)
+				if private_key == "" {
+					private_key = DefaultPrivateKey()
+				}
+
+				aSeg := fmt.Sprintf("\n\nHost %s\nHostName %s\nPort %s\nUser %s\nIdentityFile %s", shortname, host, port, username, private_key)
 				err := Append(SshConfigFile(), []byte(aSeg))
 
 				CheckError(err)
@@ -109,23 +111,31 @@ func main() {
 					Name:  "port, p",
 					Usage: "The SSH `PORT NUMBER` that the remote host is listening to",
 				},
+				cli.StringFlag{
+					Name:  "localforward, l",
+					Usage: "LocalForward to SSH to another remote host",
+				},
+				cli.StringFlag{
+					Name:  "IdentityFile,i",
+					Usage: "`Private key` that is used to log in to remote host",
+				},
 			},
 		},
 		{
 			Name:    "remove",
 			Aliases: []string{"r"},
-			Action: func(c *cli.Context) error {
-				shortname := c.String("s")
-				fmt.Println(shortname)
-				return nil
+			Action: func(c *cli.Context) {
+				shortname := c.Args().Get(0)
+				m := RemoveRemoteHost(shortname)
+				_, ok := m[shortname]
+				if ok {
+					fmt.Printf("%s is removed from remote host list", shortname)
+				} else {
+					fmt.Printf("Remove %s from remote host list failed", shortname)
+				}
 			},
+			Usage:        "A host's `SHORTNAME` that will be shown in the list",
 			BashComplete: listAvailableHosts,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "shortname,s",
-					Usage: "A host's `SHORTNAME` that will be shown in the list",
-				},
-			},
 		},
 	}
 

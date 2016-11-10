@@ -1,60 +1,75 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
-	"io"
+	//"bufio"
+	//"fmt"
+	//"io"
 	"io/ioutil"
 	"os"
 	"strings"
 )
 
+type RemoteHost struct {
+	ShortName    string
+	Host         string
+	IdentityFile string
+	User         string
+	Port         string
+}
+
 func ListHosts() []string {
-	configFile := SshConfigFile()
-
-	rw, err := os.Open(configFile)
-	CheckError(err)
-
-	defer rw.Close()
-
-	rb := bufio.NewReader(rw)
+	m := ListBlocks()
 	r := []string{}
 
-	for {
-		line, _, err := rb.ReadLine()
-		if err == io.EOF {
-			break
-		}
-
-		s := string(line)
-		if strings.HasPrefix(s, "Host ") == true && strings.Contains(s, "*") == false {
-			r = append(r, s[5:])
-		}
+	for k, _ := range m {
+		r = append(r, k)
 	}
 
 	return r
 }
 
-func ListBlocks() {
+func ListBlocks() map[string]RemoteHost {
 	content := GetConfigContent()
 
 	blocks := strings.Split(content, "\n\n")
 
-	m := make(map[string]string)
+	m := make(map[string]RemoteHost)
+
 	for _, block := range blocks {
 		lines := strings.Split(block, "\n")
+		var item RemoteHost
 		for _, line := range lines {
 			pair := strings.Split(line, " ")
 			if len(pair) > 1 {
-				for k, v := range pair {
-					fmt.Println(k, ": ", v)
+				k := pair[0]
+				v := pair[1]
+				if k == "Host" {
+					item.ShortName = v
+				}
+				if k == "HostName" {
+					item.Host = v
+				}
+
+				if k == "User" {
+					item.User = v
+				}
+
+				if k == "Port" {
+					item.Port = v
+				}
+
+				if k == "IdentityFile" {
+					item.IdentityFile = v
 				}
 			}
-			m[k] = v
+		}
+
+		if item.ShortName != "*" {
+			m[item.ShortName] = item
 		}
 	}
 
-	//fmt.Println(m)
+	return m
 }
 
 func GetConfigContent() string {

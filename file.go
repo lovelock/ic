@@ -13,6 +13,11 @@ func Create(filename string) error {
 	return err
 }
 
+func Write(filename string, content []byte) {
+	err := ioutil.WriteFile(filename, content, 0600)
+	CheckError(err)
+}
+
 func Append(filename string, content []byte) error {
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0600)
 	CheckError(err)
