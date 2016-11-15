@@ -175,11 +175,11 @@ func removeRemoteHostAction(c *cli.Context) {
 
 func initAction(c *cli.Context) error {
 	config := SshConfigFile()
-	log.Printf("SSH config file is %s", config)
+	log.Debugf("SSH config file is %s", config)
 
 	if Exists(config) == false {
 		err := Create(config)
-		log.Printf("Create %s failed, verbose log %v", config, err)
+		log.Debugf("Create %s failed, verbose log %v", config, err)
 		err = Append(config, GetInitSetting())
 		CheckError(err)
 	}
