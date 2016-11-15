@@ -12,6 +12,13 @@ type RemoteHost struct {
 	IdentityFile string
 	User         string
 	Port         string
+	Forwards     []LocalForward
+}
+
+type LocalForward struct {
+	User string
+	Host string
+	Port string
 }
 
 func ListHosts() []string {
