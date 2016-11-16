@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/urfave/cli"
 	"log"
 	"os"
 	"os/exec"
+
+	"github.com/urfave/cli"
 )
 
 func main() {
@@ -22,14 +23,12 @@ func main() {
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
-			Name:    "init",
-			Aliases: []string{"i"},
-			Usage:   "Init config file for no request for password when one session is active",
-			Action:  initAction,
+			Name:   "init",
+			Usage:  "Init config file for no request for password when one session is active",
+			Action: initAction,
 		},
 		{
 			Name:         "connect",
-			Aliases:      []string{"c"},
 			Action:       connectRemoteHostAction,
 			Usage:        "complete a task on the list",
 			BashComplete: listAvailableHosts,
@@ -39,7 +38,7 @@ func main() {
 			Aliases: []string{"a"},
 			Action:  addRemoteHostAction,
 			BashComplete: func(c *cli.Context) {
-				options := []string{"--short_name", "--host", "--user_name", "--port", "--identity_file"}
+				options := []string{"--Host", "--HostName", "--User", "--Port", "--IdentityFile"}
 				if c.NArg() > 0 {
 					return
 				}
@@ -50,47 +49,75 @@ func main() {
 			},
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "shortname,s",
-					Usage: "A host's `SHORTNAME` that will be shown in the list",
+					Name:  "Host",
+					Usage: "A host's `name` that will be shown in the list",
 				},
 				cli.StringFlag{
-					Name:  "username, u",
+					Name:  "User",
 					Usage: "`User name` that will be used to log in remote host",
 				},
 				cli.StringFlag{
-					Name:  "host",
-					Usage: "Remote server's IP or `HOSTNAME`",
+					Name:  "HostName",
+					Usage: "Remote server's IP address or hostname",
 				},
 				cli.StringFlag{
-					Name:  "port, p",
+					Name:  "Port",
 					Usage: "The SSH `PORT NUMBER` that the remote host is listening to",
+				},
+				cli.StringFlag{
+					Name:  "IdentityFile",
+					Usage: "The private key that is used to connect to remote host",
 				},
 			},
 		},
 		{
-			Name:    "add_local_forward",
-			Aliases: []string{"al"},
+			Name: "info",
 			Action: func(c *cli.Context) {
-				short_name := c.String("short_name")
-				localforward := c.String("local_forward")
-				forward_ip := c.String("forward_ip")
-				forward_port := c.String("forward_port")
-				forward_user := c.String("forward_user")
-
-				lPort := RandomPortForLocalForward()
+				entry := c.Args().First()
 
 				bs := ListBlocks()
-				fmt.Println(bs)
 
-				fmt.Println(short_name, forward_ip, forward_port)
+				for k, v := range bs {
+					if k == entry {
+						fmt.Printf("Entry detail: %+v", v)
+					}
+				}
+			},
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "Pretty",
+					Usage: "Entry you want to describe",
+				},
+			},
+			BashComplete: listAvailableHosts,
+		},
+		{
+			Name: "add_local_forward",
+			Action: func(c *cli.Context) {
+				entry := c.String("Entry")
+				host := c.String("Host")
+				forwardIP := c.String("ForwardIP")
+				forwardPort := c.String("ForwardPort")
+				forwardUser := c.String("ForwardUser")
 
-				lSeg := fmt.Sprintf("\n\nHost %s\nHostName 127.0.0.1\nUser %s\nPort %d", localforward, forward_user, lPort)
-				err := Append(SshConfigFile(), []byte(lSeg))
+				localPort := RandomPortForLocalForward()
 
-				CheckError(err)
+				bs := ListBlocks()
+				log.Println(bs)
+
+				log.Println(entry, host, localPort, forwardIP, forwardPort, forwardUser)
+
+				if forwardUser == "" {
+					forwardUser = MyName()
+				}
+
+				//				lSeg := fmt.Sprintf("\n\nHost %s\nHostName 127.0.0.1\nUser %s\nPort %d", localforward, forward_user, localPort)
+				//				err := Append(SshConfigFile(), []byte(lSeg))
+
+				//				CheckError(err)
 			},
 			BashComplete: func(c *cli.Context) {
-				options := []string{"--short_name", "--identity_file", "--forward_ip", "--forward_port", "--forward_user"}
+				options := []string{"--Entry", "--Host", "--IdentityFile", "--ForwardIP", "--ForwardPort", "--ForwardUser"}
 				if c.NArg() > 0 {
 					return
 				}
@@ -101,23 +128,27 @@ func main() {
 			},
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "local_forward, l",
-					Usage: "LocalForward to SSH to another remote host",
+					Name:  "Entry",
+					Usage: "Which entry would be chosen to do local forwarding",
 				},
 				cli.StringFlag{
-					Name:  "identity_file,i",
+					Name:  "Host",
+					Usage: "New entry's name",
+				},
+				cli.StringFlag{
+					Name:  "IdentityFile",
 					Usage: "`Private key` that is used to log in to remote host",
 				},
 				cli.StringFlag{
-					Name:  "forward_ip",
+					Name:  "ForwardIP",
 					Usage: "IP that must be forwared",
 				},
 				cli.StringFlag{
-					Name:  "forward_port",
+					Name:  "ForwardPort",
 					Usage: "Port that must be forwared",
 				},
 				cli.StringFlag{
-					Name:  "forward_user",
+					Name:  "ForwardUser",
 					Usage: "Forward host's username",
 				},
 			},
@@ -175,11 +206,11 @@ func removeRemoteHostAction(c *cli.Context) {
 
 func initAction(c *cli.Context) error {
 	config := SshConfigFile()
-	log.Debugf("SSH config file is %s", config)
+	log.Printf("SSH config file is %s", config)
 
 	if Exists(config) == false {
 		err := Create(config)
-		log.Debugf("Create %s failed, verbose log %v", config, err)
+		log.Printf("Create %s failed, verbose log %v", config, err)
 		err = Append(config, GetInitSetting())
 		CheckError(err)
 	}
@@ -188,19 +219,19 @@ func initAction(c *cli.Context) error {
 }
 
 func addRemoteHostAction(c *cli.Context) {
-	shortname := c.String("s")
-	host := c.String("host")
-	port := c.String("p")
-	username := c.String("u")
-	private_key := c.String("i")
+	host := c.String("Host")
+	hostName := c.String("HostName")
+	port := c.String("Port")
+	username := c.String("User")
+	private_key := c.String("IdentityFile")
 
-	if host == "" {
+	if hostName == "" {
 		fmt.Println("Please porivde host at least")
 		os.Exit(1)
 	}
 
-	if shortname == "" {
-		shortname = host
+	if host == "" {
+		host = hostName
 	}
 
 	if port == "" {
@@ -215,7 +246,7 @@ func addRemoteHostAction(c *cli.Context) {
 		private_key = DefaultPrivateKey()
 	}
 
-	aSeg := fmt.Sprintf("\n\nHost %s\nHostName %s\nPort %s\nUser %s\nIdentityFile %s", shortname, host, port, username, private_key)
+	aSeg := fmt.Sprintf("\n\nHost %s\nHostName %s\nPort %s\nUser %s\nIdentityFile %s", host, hostName, port, username, private_key)
 	err := Append(SshConfigFile(), []byte(aSeg))
 	CheckError(err)
 }
