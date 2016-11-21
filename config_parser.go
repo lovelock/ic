@@ -7,8 +7,8 @@ import (
 )
 
 type RemoteHost struct {
-	ShortName    string
 	Host         string
+	HostName     string
 	IdentityFile string
 	User         string
 	Port         string
@@ -16,9 +16,11 @@ type RemoteHost struct {
 }
 
 type LocalForward struct {
-	User string
-	Host string
-	Port string
+	User       string
+	Host       string
+	HostName   string
+	LocalPort  string
+	RemotePort string
 }
 
 func ListHosts() []string {
@@ -43,15 +45,15 @@ func ListBlocks() map[string]RemoteHost {
 		lines := strings.Split(block, "\n")
 		var item RemoteHost
 		for _, line := range lines {
-			pair := strings.Split(line, " ")
+			pair := strings.SplitN(line, " ", 2)
 			if len(pair) > 1 {
 				k := pair[0]
 				v := pair[1]
 				if k == "Host" {
-					item.ShortName = v
+					item.Host = v
 				}
 				if k == "HostName" {
-					item.Host = v
+					item.HostName = v
 				}
 
 				if k == "User" {
@@ -65,11 +67,16 @@ func ListBlocks() map[string]RemoteHost {
 				if k == "IdentityFile" {
 					item.IdentityFile = v
 				}
+
+				if k == "LocalForward" {
+					localForward := ParseLocalForward(v)
+					item.Forwards = append(item.Forwards, localForward)
+				}
 			}
 		}
 
-		if item.ShortName != "*" {
-			m[item.ShortName] = item
+		if item.Host != "*" {
+			m[item.Host] = item
 		}
 	}
 
@@ -87,4 +94,28 @@ func GetConfigContent() string {
 	CheckError(err)
 
 	return string(fd)
+}
+
+func RemoteHostDetail(entry string) RemoteHost {
+	bs := ListBlocks()
+
+	return bs[entry]
+}
+
+func ParseLocalForward(forward string) LocalForward {
+	v1 := strings.Split(forward, " ")
+	localPort := v1[0]
+	hp := v1[1]
+	v2 := strings.Split(hp, ":")
+	remoteHost := v2[0]
+	remotePort := v2[1]
+
+	localForward := LocalForward{
+		HostName:   remoteHost,
+		LocalPort:  localPort,
+		RemotePort: remotePort,
+		User:       "wqc",
+	}
+
+	return localForward
 }

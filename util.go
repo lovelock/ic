@@ -2,6 +2,7 @@ package main
 
 import (
 	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -11,7 +12,8 @@ func CheckError(err error) {
 	}
 }
 
-func RandomPortForLocalForward() int64 {
+func RandomPortForLocalForward() string {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	return r.Int63n(10000)
+	s := strconv.FormatInt(r.Int63n(10000), 10)
+	return s
 }

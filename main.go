@@ -71,18 +71,8 @@ func main() {
 			},
 		},
 		{
-			Name: "info",
-			Action: func(c *cli.Context) {
-				entry := c.Args().First()
-
-				bs := ListBlocks()
-
-				for k, v := range bs {
-					if k == entry {
-						fmt.Printf("Entry detail: %+v", v)
-					}
-				}
-			},
+			Name:   "info",
+			Action: remoteHostInfo,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "Pretty",
@@ -102,19 +92,25 @@ func main() {
 
 				localPort := RandomPortForLocalForward()
 
-				bs := ListBlocks()
-				log.Println(bs)
-
 				log.Println(entry, host, localPort, forwardIP, forwardPort, forwardUser)
 
 				if forwardUser == "" {
 					forwardUser = MyName()
 				}
 
-				//				lSeg := fmt.Sprintf("\n\nHost %s\nHostName 127.0.0.1\nUser %s\nPort %d", localforward, forward_user, localPort)
-				//				err := Append(SshConfigFile(), []byte(lSeg))
+				thisEntry := RemoteHostDetail(entry)
+				log.Println(thisEntry)
+				newForward := LocalForward{
+					Host:       host,
+					HostName:   forwardIP,
+					LocalPort:  localPort,
+					RemotePort: forwardPort,
+					User:       "wqc",
+				}
 
-				//				CheckError(err)
+				thisEntry.Forwards = append(thisEntry.Forwards, newForward)
+
+				log.Println(thisEntry)
 			},
 			BashComplete: func(c *cli.Context) {
 				options := []string{"--Entry", "--Host", "--IdentityFile", "--ForwardIP", "--ForwardPort", "--ForwardUser"}
@@ -223,32 +219,10 @@ func addRemoteHostAction(c *cli.Context) {
 	hostName := c.String("HostName")
 	port := c.String("Port")
 	username := c.String("User")
-	private_key := c.String("IdentityFile")
+	privateKey := c.String("IdentityFile")
 
-	if hostName == "" {
-		fmt.Println("Please porivde host at least")
-		os.Exit(1)
-	}
-
-	if host == "" {
-		host = hostName
-	}
-
-	if port == "" {
-		port = "22"
-	}
-
-	if username == "" {
-		username = MyName()
-	}
-
-	if private_key == "" {
-		private_key = DefaultPrivateKey()
-	}
-
-	aSeg := fmt.Sprintf("\n\nHost %s\nHostName %s\nPort %s\nUser %s\nIdentityFile %s", host, hostName, port, username, private_key)
-	err := Append(SshConfigFile(), []byte(aSeg))
-	CheckError(err)
+	aRemoteHost := AddRemoteHost(host, hostName, privateKey, port, username)
+	fmt.Printf("%+v has been added\n", aRemoteHost)
 }
 
 func connectRemoteHostAction(c *cli.Context) error {
@@ -260,4 +234,10 @@ func connectRemoteHostAction(c *cli.Context) error {
 
 	cmd.Run()
 	return nil
+}
+
+func remoteHostInfo(c *cli.Context) {
+	entry := c.Args().First()
+	v := RemoteHostDetail(entry)
+	fmt.Printf("Entry detail: %+v\n", v)
 }
