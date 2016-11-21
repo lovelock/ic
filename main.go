@@ -105,12 +105,23 @@ func main() {
 					HostName:   forwardIP,
 					LocalPort:  localPort,
 					RemotePort: forwardPort,
-					User:       "wqc",
+					User:       forwardUser,
 				}
 
 				thisEntry.Forwards = append(thisEntry.Forwards, newForward)
 
 				log.Println(thisEntry)
+				tmp := WriteRemoteHostToBlock(thisEntry)
+
+				newEntry := fmt.Sprintf("\n\nHost %s\nHostName %s\nPort %s\nUser %s\n", host, "127.0.0.1", localPort, forwardUser)
+				log.Println(newEntry)
+
+				RemoveRemoteHost(entry)
+
+				Append(SshConfigFile(), tmp)
+				Append(SshConfigFile(), []byte(newEntry))
+
+				ReconnectTunnel(entry)
 			},
 			BashComplete: func(c *cli.Context) {
 				options := []string{"--Entry", "--Host", "--IdentityFile", "--ForwardIP", "--ForwardPort", "--ForwardUser"}
@@ -234,6 +245,15 @@ func connectRemoteHostAction(c *cli.Context) error {
 
 	cmd.Run()
 	return nil
+}
+
+func ReconnectTunnel(t string) {
+	cmd := exec.Command("ssh", "-f", "-N", t)
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+
+	cmd.Run()
 }
 
 func remoteHostInfo(c *cli.Context) {

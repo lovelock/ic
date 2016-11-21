@@ -85,3 +85,15 @@ func GetInitSetting() []byte {
 func RecoverBlockLines(r RemoteHost) []byte {
 	return []byte("\n\nHost " + r.Host + "\nHostName " + r.HostName + "\nPort " + r.Port + "\nUser " + r.User + "\nIdentityFile " + r.IdentityFile + "\n")
 }
+
+func WriteRemoteHostToBlock(r RemoteHost) []byte {
+	lines := []byte("\n\nHost " + r.Host + "\nHostName " + r.HostName + "\nPort " + r.Port + "\nUser " + r.User + "\nIdentityFile " + r.IdentityFile + "\n")
+
+	if r.Forwards != nil {
+		for _, f := range r.Forwards {
+			lines = append(lines, RecoverForwardLine(f)...)
+		}
+	}
+
+	return lines
+}
