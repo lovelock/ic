@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 )
 
@@ -34,7 +33,6 @@ func Exists(filename string) bool {
 	if err == nil {
 		return true
 	} else {
-		log.Printf("File %s does not exists.", filename)
 		return false
 	}
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 )
@@ -123,6 +122,5 @@ func ParseLocalForward(forward string) LocalForward {
 }
 
 func RecoverForwardLine(lf LocalForward) []byte {
-	log.Println(lf)
 	return []byte(fmt.Sprintf("LocalForward %s %s:%s\n", lf.LocalPort, lf.HostName, lf.RemotePort))
 }

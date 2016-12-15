@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 
@@ -39,6 +38,7 @@ func main() {
 			Action:  addRemoteHostAction,
 			BashComplete: func(c *cli.Context) {
 				options := []string{"--Host", "--HostName", "--User", "--Port", "--IdentityFile"}
+
 				if c.NArg() > 0 {
 					return
 				}
@@ -89,17 +89,11 @@ func main() {
 				forwardIP := c.String("ForwardIP")
 				forwardPort := c.String("ForwardPort")
 				forwardUser := c.String("ForwardUser")
+				identityFile := c.String("IdentityFile")
 
 				localPort := RandomPortForLocalForward()
 
-				log.Println(entry, host, localPort, forwardIP, forwardPort, forwardUser)
-
-				if forwardUser == "" {
-					forwardUser = MyName()
-				}
-
 				thisEntry := RemoteHostDetail(entry)
-				log.Println(thisEntry)
 				newForward := LocalForward{
 					Host:       host,
 					HostName:   forwardIP,
@@ -110,17 +104,11 @@ func main() {
 
 				thisEntry.Forwards = append(thisEntry.Forwards, newForward)
 
-				log.Println(thisEntry)
 				tmp := WriteRemoteHostToBlock(thisEntry)
 
-				newEntry := fmt.Sprintf("\n\nHost %s\nHostName %s\nPort %s\nUser %s\n", host, "127.0.0.1", localPort, forwardUser)
-				log.Println(newEntry)
-
+				AddRemoteHost(host, "127.0.0.1", identityFile, localPort, forwardUser)
 				RemoveRemoteHost(entry)
-
 				Append(SshConfigFile(), tmp)
-				Append(SshConfigFile(), []byte(newEntry))
-
 				ReconnectTunnel(entry)
 			},
 			BashComplete: func(c *cli.Context) {
@@ -213,11 +201,9 @@ func removeRemoteHostAction(c *cli.Context) {
 
 func initAction(c *cli.Context) error {
 	config := SshConfigFile()
-	log.Printf("SSH config file is %s", config)
 
 	if Exists(config) == false {
 		err := Create(config)
-		log.Printf("Create %s failed, verbose log %v", config, err)
 		err = Append(config, GetInitSetting())
 		CheckError(err)
 	}
