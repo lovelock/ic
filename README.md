@@ -37,4 +37,4 @@ Just type `ic` and press enter, it will tell you almost everything you should kn
 
 1. Create a new channel when trying to connect to a forwared host.
 1. Optimize random port generating algorithm.
-1. Create a Homebrew fomulae.
+1. Create a Homebrew formula.
