@@ -13,14 +13,28 @@ Why no one can make it easier?
 
 ## Installation
 
-### Build from source
+### `go get`
 
 ```
-go get github.com/lovelock/iconnect
+go get github.com/lovelock/ic
 ```
 
-### Binary
+and then add one line to your `.zshrc` or `.bash_profile` according to the shell you're using.
+
+`PROG=ic source $GOPATH/src/github.com/lovelock/ic/autocomplete/zsh_autocomplete`
+
+or
+
+`PROG=ic source $GOPATH/src/github.com/lovelock/ic/autocomplete/bash_autocomplete`
+
+then `source ~/.zshrc` or `source ~/.bash_profile`.
 
 ## Usage
 
-## Contribution
+Just type `ic` and press enter, it will tell you almost everything you should know to use it.
+
+## TODO
+
+1. Create a new channel when trying to connect to a forwared host.
+1. Optimize random port generating algorithm.
+1. Create a Homebrew fomulae.
